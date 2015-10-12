@@ -2,6 +2,7 @@
 
 var express = require('express');
 var bodyParser = require('body-parser');
+var _ = require('underscore');
 var app = express();
 var PORT = process.env.PORT || 3000;  //if running on Haroku
 
@@ -29,13 +30,16 @@ app.get('/todos', function (req, res){
 
 //GET /todos/:id
 app.get('/todos/:id',  function (req, res){
-    var todoId = parseInt(req.params.id,10);  //parseInt sets string to integet in base 10
-                                              //subtracting zero alos worked as it forced it to be an int.
-    var matchedTodo;
+    var todoId = parseInt(req.params.id,10);  //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
 
-    todos.forEach(function(todoList) {  //pass in object toodoList in the array todos
-        if (todoId === todoList.id){matchedTodo = todoList;}
-    });
+    var matchedTodo = _.findWhere(todos, {id:todoId});  //This is underscore which is a shortcut for everything below.
+
+                /*    var matchedTodo;
+                    todos.forEach(function(todoList) {  //pass in object toodoList in the array todos
+                        if (todoId === todoList.id){matchedTodo = todoList;}
+                    });
+                */
+
 
     if(matchedTodo){res.json(matchedTodo);}
 
@@ -50,6 +54,21 @@ app.get('/todos/:id',  function (req, res){
 
 app.post('/todos', function(req, res){
     var body = req.body;  //get the JSON object inputed
+
+    //use pick to filter only the fields you want from the entry.
+    body = _.pick(body, 'description', 'completed');
+    // OR can combine> var body = _.pick(req.body, 'description', 'completed');
+
+
+
+    // using Underscore to validate imput.  If not a bool OR not a string OR string is just spaces THEN
+    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length===0){
+        return res.status(400).send('wrong data');
+      }
+
+
+    //set body.description to be trimmed value.
+    body.description = body.description.trim();
 
     todo = body;
     todo.id = todoNextId;
