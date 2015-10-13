@@ -98,7 +98,38 @@ app.delete('/todos/:id',  function (req, res){
 
   //res.send('Asking for todo with id of ' + req.params.id);
 });
+//************************************************************
+//PUT /todos/:id
+app.put('/todos/:id',  function (req, res){
+      var body = _.pick(req.body, 'description', 'completed');   //Like POST this gets JSON data
+      var todoId = parseInt(req.params.id,10);  //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
+      var matchedTodo = _.findWhere(todos, {id:todoId});  //This is underscore which is a shortcut for everything below.
+      if(!matchedTodo){
+        return res.status(404).send("ID not found!");
+      }
 
+      var validAttributes ={};
+      // test completed field
+      if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)){ //if exists AND is true or false
+          validAttributes.completed = body.completed;   // assign it to the temporart object variable
+        }
+        else if (body.hasOwnProperty('completed')){   // if exists but is NOT boolean then error
+                 return res.status(400).send('wrong data for completed field!');
+        }
+
+
+      //test description field
+        if(body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0){
+              validAttributes.description = body.description.trim();   // assign it to the temporart object variable
+          }
+        else if (body.hasOwnProperty('description')){   // if exists but is NOT a string or is spaces.
+                 return res.status(400).send('wrong data for description field!');
+               }
+
+   //here we update it  _.extend({name: 'moe'}, {age: 50});
+        _.extend(matchedTodo, validAttributes);  //second overrides first
+        res.json(matchedTodo);
+});
 
 
 //*********************************************************
