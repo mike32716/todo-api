@@ -23,8 +23,19 @@ app.get('/', function (req, res) {
 //******************************************************
 // GET /todo
 app.get('/todos', function (req, res){
-  res.json(todos);   // This will convert array into json
-                     // ans send back the api
+  var queryParams = req.query;  //this is URL parameters
+  var filteredTodos = todos;
+
+  //if hasOwnProperty && completed === 'true'
+  if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'true'){
+        filteredTodos = _.where(filteredTodos, {completed: true});
+        }
+  else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false'){
+        filteredTodos = _.where(filteredTodos, {completed: false});
+        }
+
+  res.json(filteredTodos);   // retrun filtered params.  If not filtered return all.
+                              // This will convert array into json and send back the api
 });
 
 
