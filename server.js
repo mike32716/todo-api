@@ -82,8 +82,22 @@ app.post('/todos', function(req, res){
     res.json(body);
     //  console.log('description: ' + body.description);
 });
+//***********************************************************
+// DELETE /todos/:id
+app.delete('/todos/:id',  function (req, res){
+    var todoId = parseInt(req.params.id,10);  //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
+    var matchedTodo = _.findWhere(todos, {id:todoId});  //This is underscore which is a shortcut for everything below.
 
+    if(matchedTodo){
+                todos = _.without(todos, matchedTodo);
+                res.json(matchedTodo);
+                    }  //if find id then delete it/
 
+    else {res.status(404).send('Sorry, there is no match for id: ' + req.params.id);
+          }   //if NO match
+
+  //res.send('Asking for todo with id of ' + req.params.id);
+});
 
 
 
