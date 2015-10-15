@@ -21,7 +21,7 @@ app.get('/', function (req, res) {
 
 
 //******************************************************
-// GET /todo
+// GET /todos?completed=true&q=Tobby
 app.get('/todos', function (req, res){
   var queryParams = req.query;  //this is URL parameters
   var filteredTodos = todos;
@@ -33,6 +33,17 @@ app.get('/todos', function (req, res){
   else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false'){
         filteredTodos = _.where(filteredTodos, {completed: false});
         }
+
+
+
+   //toLowerCase converts everything to lower case before search so you get all letters A=a
+   if (queryParams.hasOwnProperty("q") && queryParams.q.length > 0){
+         filteredTodos = _.filter(filteredTodos,  function(someQ){
+           return someQ.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+         });
+    }
+
+
 
   res.json(filteredTodos);   // retrun filtered params.  If not filtered return all.
                               // This will convert array into json and send back the api
