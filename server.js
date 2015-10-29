@@ -1,9 +1,10 @@
 //SERVER.JS
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+
 var db = require ('./db.js');   //load database connection and model
+
 var app = express();
 var PORT = process.env.PORT || 3000; //if running on Haroku
 
@@ -53,31 +54,24 @@ app.get('/todos', function(req, res) {
   // This will convert array into json and send back the api
 });
 
-
+//***********************************************************************************
 //GET /todos/:id
 app.get('/todos/:id', function(req, res) {
+
   var todoId = parseInt(req.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
 
-  var matchedTodo = _.findWhere(todos, {
-    id: todoId
-  }); //This is underscore which is a shortcut for everything below.
+  db.todo.findById(todoId).then(function(todo){
+        if (!!todo){        // THIS IS NEW!  BANG BANG your a Boolean  0, null, undef = false
+                res.json(todo.toJSON());
+         } else {
+          res.status(404).send('Sorry, there is no match for id: ' + req.params.id);
+         }
+    }, function (e) {
+        res.status(55).send();
+    });
 
-  /*    var matchedTodo;
-      todos.forEach(function(todoList) {  //pass in object toodoList in the array todos
-          if (todoId === todoList.id){matchedTodo = todoList;}
-      });
-  */
-
-
-  if (matchedTodo) {
-    res.json(matchedTodo);
-  } else {
-    res.status(404).send('Sorry, there is no match for id: ' + req.params.id);
-  } //if NO match
-
-  //res.send('Asking for todo with id of ' + req.params.id);
+  
 });
-
 
 
 
@@ -101,33 +95,7 @@ db.todo.create(body).then(function(todo){
       });
 
 
-
 });
-
-
-/*
-  // using Underscore to validate imput.  If not a bool OR not a string OR string is just spaces THEN
-  if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
-    return res.status(400).send('wrong data');
-  }
-
-
-  //set body.description to be trimmed value.
-  body.description = body.description.trim();
-
-  todo = body;
-  todo.id = todoNextId;
-  todos.push(todo);
-  todoNextId = todoNextId + 1;
-  // or you can do it this way like he did.
-  //  body.id = todoNextId++;  //assigns id THEN incriments
-  //  todos.push(body);
-
-
-  res.json(body);
-  //  console.log('description: ' + body.description);
-});
-*/
 
 
 
@@ -190,16 +158,11 @@ app.put('/todos/:id', function(req, res) {
 
 
 //**checks for database named db and creates if not there.
-//** then start the server.
+//** then start the server.  Uses a PROMISE
 db.sequelize.sync().then(function(){
     app.listen(PORT, function() {
       console.log('Express listening on port ' + PORT + '!');
     });
-
-
-
-
-
 
 })
 
