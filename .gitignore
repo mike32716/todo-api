@@ -1,4 +1,7 @@
 node_modules/
 data/*sqlite
 serverBEFOREdatabaseAddedBACKUP.js
-playground/
+playground/*sqlite
+playground/basic-sqlite-database.js
+.idea/
+

@@ -4,10 +4,11 @@
 //special function gets passes the sequelize instance and DataTypes (see below)
 
 module.exports = function(sequelize, DataTypes) {
+
 	return sequelize.define('todo', {
 
 		description: {
-				type: DataTypes.STRING,
+				type: DataTypes.STRING,   //use DataTypes when being called by sequelize.import
 				allowNull: false,
 				validate: {	len: [1, 250] }
 		},
