@@ -207,7 +207,14 @@ app.put('/todos/:id', function(req, res) {
 
         .then(function(todo){
             if (todo) {
-                return todo.update(attributes);  //if todo exists then pass to next then
+                todo.update(attributes)     //if todo exists then pass to next then
+
+                .then(function(todo) {
+                    res.json(todo.toJSON());
+                }, function (e) {
+                    res.status(400).json(e);
+                });
+
             } else {
                 res.status(404).send();  //if id not exist send back a 404.
             }
@@ -215,11 +222,7 @@ app.put('/todos/:id', function(req, res) {
                res.status(500).send();  //if server broke send error
         })
 
-        .then(function(todo) {
-            res.json(todo.toJSON());
-        }, function (e) {
-            res.status(400).json(e);
-        });
+        
 
 
 
