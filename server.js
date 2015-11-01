@@ -183,41 +183,48 @@ app.delete('/todos/:id', function(req, res) {
 
 
 
-
-//************************************************************
-//PUT /todos/:id
+//*****************************************************************************
+//*****************************************************************************
+//  PUT/todos/:id
+//*****************************************************************************
 app.put('/todos/:id', function(req, res) {
   var body = _.pick(req.body, 'description', 'completed'); //Like POST this gets JSON data
-  var todoId = parseInt(req.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
-  var matchedTodo = _.findWhere(todos, {
-    id: todoId
-  }); //This is underscore which is a shortcut for everything below.
-  if (!matchedTodo) {
-    return res.status(404).send("ID not found!");
-  }
+  var todoId = parseInt(req.params.id, 10); //parseInt sets string to integer in base 10. Subtracting zero also worked as it forced it to be an int.
 
-  var validAttributes = {};
-  // test completed field
-  if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) { //if exists AND is true or false
-    validAttributes.completed = body.completed; // assign it to the temporart object variable
-  } else if (body.hasOwnProperty('completed')) { // if exists but is NOT boolean then error
-    return res.status(400).send('wrong data for completed field!');
-  }
+  var attributes = {};
+
+    if (body.hasOwnProperty('completed')) {  //if exists
+        attributes.completed = body.completed; // assign it to the temporart object variable
+    }
 
 
-  //test description field
-  if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-    validAttributes.description = body.description.trim(); // assign it to the temporart object variable
-  } else if (body.hasOwnProperty('description')) { // if exists but is NOT a string or is spaces.
-    return res.status(400).send('wrong data for description field!');
-  }
+    if (body.hasOwnProperty('description')) {
+        attributes.description = body.description; // assign it to the temporart object variable
+    }
 
-  //here we update it  _.extend({name: 'moe'}, {age: 50});
-  _.extend(matchedTodo, validAttributes); //second overrides first
-  res.json(matchedTodo);
+    // Above assigns desired changes to attributes object.  Next see if id exists and PUT.
+    db.todo.findById(todoId)
+
+        .then(function(todo){
+            if (todo) {
+                return todo.update(attributes);  //if todo exists then pass to next then
+            } else {
+                res.status(404).send();  //if id not exist send back a 404.
+            }
+        }, function (){
+               res.status(500).send();  //if server broke send error
+        })
+
+        .then(function(todo) {
+            res.json(todo.toJSON());
+        }, function (e) {
+            res.status(400).json(e);
+        });
+
+
+
+
 });
-//*********************************************************
-
 
 
 
