@@ -228,7 +228,23 @@ app.put('/todos/:id', function(req, res) {
 });
 
 
+//*****************************************************************************
+//*****************************************************************************
+//  POST /user
+//*****************************************************************************
+app.post('/users', function(request, response) {
+    var body = request.body; //get the JSON object inputed
+    //use pick to filter only the fields you want from the entry.
+    body = _.pick(body, 'email', 'password');
 
+    db.user.create(body)
+        .then(function(user){
+            response.json(user.toJSON());
+        }, function (e) {
+            response.status(400).json(e);
+        });
+
+});
 
 
 //*****************************************************************************
