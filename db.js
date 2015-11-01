@@ -2,13 +2,20 @@
 //**************************
 // This routine loads all the modules into sequelize and then return
 // that database connection to server.js which will call that file.
-
 var Sequelize = require('sequelize');
-var mikesequelize = new Sequelize(undefined, undefined, undefined, {
-							'dialect': 'sqlite',
-							'storage': __dirname + '/data/dev-todo-api.sqlite'
-	            	 });
+var env = process.env.NODE_ENV || 'development';
 
+var mikesequelize;
+
+if (env === 'production'){
+	mikesequelize = new Sequelize(process.env.DATABASE_URL,
+		{dialect: 'postgres'})
+	} else {
+		mikesequelize = new Sequelize(undefined, undefined, undefined, {
+			'dialect': 'sqlite',
+			'storage': __dirname + '/data/dev-todo-api.sqlite'
+			});
+}
 
 
 var db = {};  //Create a new OBJECT  called db to be used below and exported
