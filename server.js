@@ -18,12 +18,15 @@ app.use(bodyParser.json()); //access vis request.body
 
 //*****************************************************
 app.get('/', function(req, res) {
-  res.send('Todo API Root');
+  res.send('You are in the Todo API Root');
 })
 
 
-//******************************************************
+
+//***********************************************************************************
+//***********************************************************************************
 // GET /todos?completed=true&q=Tobby
+//***********************************************************************************
 app.get('/todos', function(req, res) {
     var query = req.query; //this is URL parameters
     var where = {};
@@ -147,25 +150,36 @@ app.post('/todos', function(request, response) {
 
 
 
-
-//***********************************************************
+//*****************************************************************************
+//*****************************************************************************
 // DELETE /todos/:id
+//*****************************************************************************
 app.delete('/todos/:id', function(req, res) {
-  var todoId = parseInt(req.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
-  var matchedTodo = _.findWhere(todos, {
-    id: todoId
-  }); //This is underscore which is a shortcut for everything below.
+    var todoId = parseInt(req.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
 
-  if (matchedTodo) {
-    todos = _.without(todos, matchedTodo);
-    res.json(matchedTodo);
-  } //if find id then delete it/
-  else {
-    res.status(404).send('Sorry, there is no match for id: ' + req.params.id);
-  } //if NO match
 
-  //res.send('Asking for todo with id of ' + req.params.id);
+    db.todo.destroy({
+        where: { id: todoId }
+    })
+    .then(function (rowsDeleted) {
+
+            if (rowsDeleted === 0) {
+                res.status(404).json({
+                 error: "no todo with id"
+             });
+             } else {
+                  res.status(204).send();
+                }
+
+    }, function (e) {
+        response.status(500).send();  //server crashed or database connection failed.
+    });
+
+
+
 });
+
+
 
 
 
