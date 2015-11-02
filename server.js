@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var _ = require('underscore');
 
 var db = require ('./db.js');   //load database connection and model
+var bcrypt = require('bcryptjs');
 
 var app = express();
 var PORT = process.env.PORT || 3000; //if running on Haroku
@@ -230,7 +231,7 @@ app.put('/todos/:id', function(req, res) {
 
 //*****************************************************************************
 //*****************************************************************************
-//  POST /user
+//  POST /users
 //*****************************************************************************
 app.post('/users', function(request, response) {
     var body = request.body; //get the JSON object inputed
@@ -247,13 +248,37 @@ app.post('/users', function(request, response) {
 });
 
 
+
+//*****************************************************************************
+//*****************************************************************************
+//  POST /users/login
+//*****************************************************************************
+app.post('/users/login', function(request, response) {
+    var body = request.body; //get the JSON object inputed
+    //use pick to filter only the fields you want from the entry.
+    body = _.pick(body, 'email', 'password');
+
+    //here is where we put in our own custom sequelize method
+    db.user.authenticate(body).then(function(user){
+        response.json(user.toPublicJSON());
+    }, function (){
+        response.status(401).send();
+    });
+
+});
+
+
+
+
+
+
 //*****************************************************************************
 //*****************************************************************************
 //**checks for database named db and creates if not there.
 //** then start the server.  Uses a PROMISE
 //*****************************************************************************
 
-db.sequelize.sync({force: false}).then(function(){
+db.sequelize.sync({force: true}).then(function(){
     app.listen(PORT, function() {
       console.log('Express listening on port ' + PORT + '!');
     });

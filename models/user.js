@@ -1,13 +1,12 @@
 /**
  * Created by Miguel on 11/1/2015.
  */
-
 var bcrypt = require('bcryptjs');
 var _ = require('underscore');
 
 module.exports = function(sequelize, DataTypes) {
 
-    return sequelize.define('user', {
+    var user = sequelize.define('user', {
 
             email: {
                 type: DataTypes.STRING,   //use DataTypes when being called by sequelize.import
@@ -31,11 +30,11 @@ module.exports = function(sequelize, DataTypes) {
                 set: function (value){
                         var salt = bcrypt.genSaltSync(10);
                        // console.log(salt);
-                        var hash = bcrypt.hashSync("mike32716", salt);
+                        var hashedPassword = bcrypt.hashSync(value, salt);
                        // console.log(hash);
                         this.setDataValue('password', value);
                         this.setDataValue('salt', salt);
-                        this.setDataValue('password_hash', hash);
+                        this.setDataValue('password_hash', hashedPassword);
                         }
             }
 
@@ -51,6 +50,46 @@ module.exports = function(sequelize, DataTypes) {
                 }
 
             },
+
+
+            classMethods: {
+                authenticate: function(body){
+                  return new Promise(function(resolve, reject){
+                    //check for validation are they both strings  if not send 400
+                    if (typeof body.email !== 'string' || typeof body.password !== 'string'){
+                            //return response.status(400).send('Sorry, you need to enter an EMAIL and PASSWORD');
+                            return reject();  //error message is wired up in calling function
+                     }
+
+                     //findOne(user where email = email passed in)
+                     //db.user.findOne({ where: { email: body.email }  })
+                     user.findOne({ where: { email: body.email }  })  //nodb variable to use
+
+                     .then(function(user){
+                              if (!user ) {
+                                  //return response.status(401).send('No user match!');
+                                  return reject();  //wired up in calling function
+                              }
+                              else if (!bcrypt.compareSync( body.password, user.get('password_hash') ) ) {
+                                  //return response.status(401).send('Password invalid!');
+                                  return reject();  //wired up in calling function
+                              }
+
+                            //response.json(user.toPublicJSON());  //call toPublicJSON so not to print salt n hash
+                            resolve(user); //if successful send back user data
+
+                      }, function (e) {
+                        //response.status(500).json(e);
+                        reject();
+                      });
+
+                  });
+
+                }
+
+            },
+
+
             instanceMethods: {
 
                     toPublicJSON: function(){
@@ -60,6 +99,6 @@ module.exports = function(sequelize, DataTypes) {
             }
         });
 
+return user;
 
 };
-
