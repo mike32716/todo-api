@@ -5,6 +5,7 @@ var _ = require('underscore');
 
 var db = require ('./db.js');   //load database connection and model
 var bcrypt = require('bcryptjs');
+var middleware = require('./middleware.js')(db);
 
 var app = express();
 var PORT = process.env.PORT || 3000; //if running on Haroku
@@ -28,7 +29,7 @@ app.get('/', function(req, res) {
 //***********************************************************************************
 // GET /todos?completed=true&q=Tobby
 //***********************************************************************************
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication, function(req, res) {
     var query = req.query; //this is URL parameters
     var where = {};
 
@@ -109,7 +110,7 @@ app.get('/todos', function(req, res) {
 //***********************************************************************************
 //  GET /todos/:id
 //***********************************************************************************
-app.get('/todos/:id', function(request, response) {
+app.get('/todos/:id', middleware.requireAuthentication, function(request, response) {
 
       var todoId = parseInt(request.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero also worked as it forced it to be an int.
 
@@ -133,7 +134,7 @@ app.get('/todos/:id', function(request, response) {
 //*****************************************************************************
 //  POST /todos
 //*****************************************************************************
-app.post('/todos', function(request, response) {
+app.post('/todos', middleware.requireAuthentication, function(request, response) {
   var body = request.body; //get the JSON object inputed
   //use pick to filter only the fields you want from the entry.
   body = _.pick(body, 'description', 'completed');
@@ -155,7 +156,7 @@ app.post('/todos', function(request, response) {
 //*****************************************************************************
 // DELETE /todos/:id
 //*****************************************************************************
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
 
 
@@ -188,7 +189,7 @@ app.delete('/todos/:id', function(req, res) {
 //*****************************************************************************
 //  PUT/todos/:id
 //*****************************************************************************
-app.put('/todos/:id', function(req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
   var body = _.pick(req.body, 'description', 'completed'); //Like POST this gets JSON data
   var todoId = parseInt(req.params.id, 10); //parseInt sets string to integer in base 10. Subtracting zero also worked as it forced it to be an int.
 
@@ -284,7 +285,7 @@ app.post('/users/login', function(request, response) {
 //** then start the server.  Uses a PROMISE
 //*****************************************************************************
 
-db.sequelize.sync({force: false}).then(function(){
+db.sequelize.sync({force: true}).then(function(){
     app.listen(PORT, function() {
       console.log('Express listening on port ' + PORT + '!');
     });
