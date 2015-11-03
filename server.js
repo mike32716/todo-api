@@ -260,7 +260,13 @@ app.post('/users/login', function(request, response) {
 
     //here is where we put in our own custom sequelize method
     db.user.authenticate(body).then(function(user){
-        response.json(user.toPublicJSON());
+
+      var token = user.generateToken('authentication');
+      if (token) {
+          response.header('Auth', token).json(user.toPublicJSON());
+        } else {
+          response.status(401).send();
+        }
     }, function (){
         response.status(401).send();
     });
@@ -278,7 +284,7 @@ app.post('/users/login', function(request, response) {
 //** then start the server.  Uses a PROMISE
 //*****************************************************************************
 
-db.sequelize.sync({force: true}).then(function(){
+db.sequelize.sync({force: false}).then(function(){
     app.listen(PORT, function() {
       console.log('Express listening on port ' + PORT + '!');
     });
