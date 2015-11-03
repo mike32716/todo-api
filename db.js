@@ -29,5 +29,7 @@ db.sequelize = mikesequelize;  //set equal to the sequelize instance created abo
 
 db.Sequelize = Sequelize; //set to the require Sequelize module.  not sure why.
 
+db.todo.belongsTo(db.user);
+db.user.hasMany(db.todo);    // assign relationships
 
 module.exports = db;  //export the object that we created.
