@@ -31,9 +31,8 @@ app.get('/', function(req, res) {
 //***********************************************************************************
 app.get('/todos', middleware.requireAuthentication, function(req, res) {
     var query = req.query; //this is URL parameters
-    var where = {};
-
-    console.log(query.q, query.completed);
+    var where = { userId: req.user.get('id') };  //only get the user's todos
+    //console.log(query.q, query.completed);
 
     if (query.hasOwnProperty("completed") && query.completed === 'true'){
         where.completed = true;
@@ -56,53 +55,6 @@ app.get('/todos', middleware.requireAuthentication, function(req, res) {
 });
 
 
- //  }
-// if quiery is the length greater than zero?
-
-
-    /*.then(function(){
-        return Todo.findAll({
-            where: {completed: false,
-                description:{$like: '%trash%'}
-            }
-        });
-    })
-
-    db.todo.findById(todoId)
-        .then(function(todo){
-            if (!!todo){    // THIS IS NEW!  BANG BANG your a Boolean.  if is  0, null, undef = false.  Else it is true
-                response.json(todo.toJSON());
-            } else {
-                response.status(404).send('Sorry, there is no match for id: ' + request.params.id);
-            }
-        }, function (e) {
-            response.status(500).send();  //server crashed or database connection failed.
-        });*/
-
-
-
-    /*var filteredTodos = todos;
-      //if hasOwnProperty && completed === 'true'
-      if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'true') {
-        filteredTodos = _.where(filteredTodos, {
-          completed: true
-        });
-      } else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
-        filteredTodos = _.where(filteredTodos, {
-          completed: false
-        });
-      }
-
-      //toLowerCase converts everything to lower case before search so you get all letters A=a
-      if (queryParams.hasOwnProperty("q") && queryParams.q.length > 0) {
-        filteredTodos = _.filter(filteredTodos, function(someQ) {
-          return someQ.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
-        });
-      }
-
-      res.json(filteredTodos); // retrun filtered params.  If not filtered return all.
-      // This will convert array into json and send back the api*/
-//    });
 
 
 
@@ -113,12 +65,22 @@ app.get('/todos', middleware.requireAuthentication, function(req, res) {
 app.get('/todos/:id', middleware.requireAuthentication, function(request, response) {
 
       var todoId = parseInt(request.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero also worked as it forced it to be an int.
+      var onlineUserId = request.user.get('id');  //only get the user's todos }
 
-      db.todo.findById(todoId)
-          .then(function(todo){
-            if (!!todo){    // THIS IS NEW!  BANG BANG your a Boolean.  if is  0, null, undef = false.  Else it is true
+       //db.todo.findById(todoId)  //switch to find one
+         db.todo.findOne({
+                where: {
+                        id: todoId,
+                        userId: onlineUserId
+                }
+         })
+
+          .then(function(todo){     // && is a double check of above.  don't need second part.
+            if (!!todo && (onlineUserId === todo.userId)){    // THIS IS NEW!  BANG BANG your a Boolean.  if is  0, null, undef = false.  Else it is true
                     response.json(todo.toJSON());
              } else {
+               //console.log(todo.userId);
+               //console.log(onlineUserId);
               response.status(404).send('Sorry, there is no match for id: ' + request.params.id);
              }
         }, function (e) {
@@ -165,10 +127,11 @@ app.post('/todos', middleware.requireAuthentication, function(request, response)
 //*****************************************************************************
 app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id, 10); //parseInt sets string to integet in base 10. Subtracting zero alos worked as it forced it to be an int.
-
+    var onlineUserId = req.user.get('id');  //Andrew did not use variables and put this below.
 
     db.todo.destroy({
-        where: { id: todoId }
+        where: { id: todoId,
+                  userId: onlineUserId }   // also checkif userId = the onlineUserId
     })
     .then(function (rowsDeleted) {
 
@@ -199,7 +162,7 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
   var body = _.pick(req.body, 'description', 'completed'); //Like POST this gets JSON data
   var todoId = parseInt(req.params.id, 10); //parseInt sets string to integer in base 10. Subtracting zero also worked as it forced it to be an int.
-
+  var onlineUserId = req.user.get('id');
   var attributes = {};
 
     if (body.hasOwnProperty('completed')) {  //if exists
@@ -212,10 +175,15 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
     }
 
     // Above assigns desired changes to attributes object.  Next see if id exists and PUT.
-    db.todo.findById(todoId)
-
+  //  db.todo.findById(todoId)  //same as first on.  findone with wehre clause
+    db.todo.findOne({
+           where: {
+                   id: todoId,
+                   userId: onlineUserId
+           }
+    })
         .then(function(todo){
-            if (todo) {
+            if (todo && todo.userId == onlineUserId  ) {
                 todo.update(attributes)
 
                 .then(function(todo) {
@@ -292,7 +260,7 @@ app.post('/users/login', function(request, response) {
 //** then start the server.  Uses a PROMISE
 //*****************************************************************************
 
-db.sequelize.sync({force: true}).then(function(){
+db.sequelize.sync({force: false}).then(function(){
     app.listen(PORT, function() {
       console.log('Express listening on port ' + PORT + '!');
     });
