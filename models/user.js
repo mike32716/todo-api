@@ -11,6 +11,7 @@ module.exports = function(sequelize, DataTypes) {
 
     var user = sequelize.define('user', {
 
+
             email: {
                 type: DataTypes.STRING,   //use DataTypes when being called by sequelize.import
                 allowNull: false,
@@ -18,13 +19,16 @@ module.exports = function(sequelize, DataTypes) {
                 validate: {	isEmail: true }
             },
 
+
             salt:  {
                 type: DataTypes.STRING
             },
 
+
             password_hash: {
                 type: DataTypes.STRING
             },
+
 
             password: {
                 type: DataTypes.VIRTUAL,
@@ -38,8 +42,9 @@ module.exports = function(sequelize, DataTypes) {
                         this.setDataValue('password', value);
                         this.setDataValue('salt', salt);
                         this.setDataValue('password_hash', hashedPassword);
-                        }
+                  }
             }
+
 
         },
 

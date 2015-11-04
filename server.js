@@ -233,21 +233,55 @@ app.post('/users/login', function(request, response) {
     var body = request.body; //get the JSON object inputed
     //use pick to filter only the fields you want from the entry.
     body = _.pick(body, 'email', 'password');
+    var userInstance;  //for logout
 
     //here is where we put in our own custom sequelize method
-    db.user.authenticate(body).then(function(user){
+    db.user.authenticate(body)
 
-      var token = user.generateToken('authentication');
-      if (token) {
-          response.header('Auth', token).json(user.toPublicJSON());
-        } else {
-          response.status(401).send();
-        }
-    }, function (){
+     .then(function(user){
+        var token = user.generateToken('authentication');
+        userInstance = user; // new for logout
+        return db.token.create({  // for logout
+            token: token
+        });
+
+            // if (token) {   //obsolete now since validation done in token model
+            //     response.header('Auth', token).json(user.toPublicJSON());
+            //   } else {
+            //     response.status(401).send();
+            //   }
+
+    }).then(function(tokenInstance){
+           response.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
+
+    }).catch(function (){
         response.status(401).send();
     });
 
 });
+
+
+
+//*****************************************************************************
+//*****************************************************************************
+//  DELETE /users/login    *** LOGOUT
+//*****************************************************************************
+app.delete('/users/login', middleware.requireAuthentication, function(request, response){
+        request.token.destroy().then(function(){
+            response.status(204).send('Logged Out!');
+        }).catch(function(){
+            response.status(500).send('Server Error!');
+        })
+
+});
+
+
+
+
+
+
+
+
 
 
 
@@ -260,7 +294,7 @@ app.post('/users/login', function(request, response) {
 //** then start the server.  Uses a PROMISE
 //*****************************************************************************
 
-db.sequelize.sync({force: false}).then(function(){
+db.sequelize.sync({force: true}).then(function(){
     app.listen(PORT, function() {
       console.log('Express listening on port ' + PORT + '!');
     });

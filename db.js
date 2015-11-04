@@ -24,10 +24,11 @@ var db = {};  //Create a new OBJECT  called db to be used below and exported
 //load in database definition model from separate files to keep it clean.
 db.todo = mikesequelize.import(__dirname + '/models/todo.js');
 db.user = mikesequelize.import(__dirname + '/models/user.js');  //add user section
-
+db.token = mikesequelize.import(__dirname + '/models/token.js');  //import token model
 db.sequelize = mikesequelize;  //set equal to the sequelize instance created above.
 
-db.Sequelize = Sequelize; //set to the require Sequelize module.  not sure why.
+//db.Sequelize = Sequelize; //set to the require Sequelize module.  not sure why. He says don't need!
+
 
 db.todo.belongsTo(db.user);
 db.user.hasMany(db.todo);    // assign relationships
